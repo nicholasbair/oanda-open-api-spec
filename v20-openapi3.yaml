@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: OANDA v20 REST API
   description: |
@@ -1255,6 +1255,8 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Price'
                   - $ref: '#/components/schemas/PricingHeartbeat'
+                discriminator:
+                  propertyName: type
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1734,6 +1736,8 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Transaction'
                   - $ref: '#/components/schemas/TransactionHeartbeat'
+                discriminator:
+                  propertyName: type
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2297,8 +2301,7 @@ components:
         type:
           type: string
           description: The Type of the Transaction
-          enum:
-            - CLIENT_CONFIGURE
+          const: CLIENT_CONFIGURE
         alias:
           type: string
           description: The client-provided alias for the Account
@@ -2975,9 +2978,8 @@ components:
       description: Client-viewable pricing information for an Instrument
       properties:
         type:
-          type: string
+          const: PRICE
           description: The string "PRICE"
-          default: PRICE
         instrument:
           type: string
           description: The Price's Instrument
@@ -3022,9 +3024,8 @@ components:
       description: Streaming price information
       properties:
         type:
-          type: string
+          const: PRICE
           description: The string "PRICE"
-          default: PRICE
         instrument:
           type: string
           description: The Price's Instrument
@@ -3068,9 +3069,8 @@ components:
       description: Heartbeat message for pricing stream
       properties:
         type:
-          type: string
+          const: HEARTBEAT
           description: The string "HEARTBEAT"
-          default: HEARTBEAT
         time:
           type: string
           format: date-time
@@ -3176,9 +3176,8 @@ components:
       description: Heartbeat message for transaction stream
       properties:
         type:
-          type: string
+          const: HEARTBEAT
           description: The string "HEARTBEAT"
-          default: HEARTBEAT
         time:
           type: string
           format: date-time
