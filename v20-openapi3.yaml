@@ -527,6 +527,70 @@ paths:
           $ref: '#/components/responses/NotFound'
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
+    put:
+      tags:
+        - Orders
+      summary: Update Order
+      description: Replace an Order in an Account by simultaneously cancelling it and creating a replacement Order
+      operationId: updateOrder
+      parameters:
+        - $ref: '#/components/parameters/AccountID'
+        - $ref: '#/components/parameters/AcceptDatetimeFormat'
+        - name: orderSpecifier
+          in: path
+          description: The Order Specifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order:
+                  $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: The Order was updated as specified
+          headers:
+            RequestID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderCancelTransaction:
+                    $ref: '#/components/schemas/OrderCancelTransaction'
+                  orderCreateTransaction:
+                    $ref: '#/components/schemas/Transaction'
+                  orderFillTransaction:
+                    $ref: '#/components/schemas/OrderFillTransaction'
+                  orderReissueTransaction:
+                    $ref: '#/components/schemas/Transaction'
+                  orderReissueRejectTransaction:
+                    $ref: '#/components/schemas/Transaction'
+                  relatedTransactionIDs:
+                    type: array
+                    items:
+                      type: string
+                  lastTransactionID:
+                    type: string
+        '400':
+          description: The Order specification was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderRejectResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
 
   /accounts/{accountID}/orders/{orderSpecifier}/cancel:
     put:
@@ -564,6 +628,62 @@ paths:
                       type: string
                   lastTransactionID:
                     type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /accounts/{accountID}/orders/{orderSpecifier}/clientExtensions:
+    put:
+      tags:
+        - Orders
+      summary: Update Order Client Extensions
+      description: Update the Client Extensions for an Order in an Account
+      operationId: updateOrderClientExtensions
+      parameters:
+        - $ref: '#/components/parameters/AccountID'
+        - $ref: '#/components/parameters/AcceptDatetimeFormat'
+        - name: orderSpecifier
+          in: path
+          description: The Order Specifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientExtensions:
+                  $ref: '#/components/schemas/ClientExtensions'
+                tradeClientExtensions:
+                  $ref: '#/components/schemas/ClientExtensions'
+      responses:
+        '200':
+          description: The Order's Client Extensions were updated as specified
+          headers:
+            RequestID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderClientExtensionsModifyTransaction:
+                    $ref: '#/components/schemas/Transaction'
+                  relatedTransactionIDs:
+                    type: array
+                    items:
+                      type: string
+                  lastTransactionID:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -771,6 +891,60 @@ paths:
                     $ref: '#/components/schemas/OrderFillTransaction'
                   orderCancelTransaction:
                     $ref: '#/components/schemas/OrderCancelTransaction'
+                  relatedTransactionIDs:
+                    type: array
+                    items:
+                      type: string
+                  lastTransactionID:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /accounts/{accountID}/trades/{tradeSpecifier}/clientExtensions:
+    put:
+      tags:
+        - Trades
+      summary: Update Trade Client Extensions
+      description: Update the Client Extensions for a Trade in an Account
+      operationId: updateTradeClientExtensions
+      parameters:
+        - $ref: '#/components/parameters/AccountID'
+        - $ref: '#/components/parameters/AcceptDatetimeFormat'
+        - name: tradeSpecifier
+          in: path
+          description: The Trade Specifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientExtensions:
+                  $ref: '#/components/schemas/ClientExtensions'
+      responses:
+        '200':
+          description: The Trade's Client Extensions were updated as specified
+          headers:
+            RequestID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tradeClientExtensionsModifyTransaction:
+                    $ref: '#/components/schemas/Transaction'
                   relatedTransactionIDs:
                     type: array
                     items:
@@ -1081,6 +1255,217 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Price'
                   - $ref: '#/components/schemas/PricingHeartbeat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /accounts/{accountID}/candles/latest:
+    get:
+      tags:
+        - Pricing
+      summary: Latest Candlesticks
+      description: Get latest candlesticks for multiple instruments
+      operationId: getLatestCandles
+      parameters:
+        - $ref: '#/components/parameters/AccountID'
+        - name: candleSpecifications
+          in: query
+          description: List of candle specifications (instrument:granularity:priceComponent)
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          example: ["EUR_USD:M5:BMA", "USD_JPY:H1:BA"]
+        - name: units
+          in: query
+          description: Number of units to use for calculating volume-weighted candles
+          required: false
+          schema:
+            type: string
+        - name: smooth
+          in: query
+          description: Whether to smooth the returned candlesticks
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: dailyAlignment
+          in: query
+          description: Hour of day to align daily candles (0-23)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 23
+            default: 17
+        - name: alignmentTimezone
+          in: query
+          description: Timezone for dailyAlignment (e.g., America/New_York)
+          required: false
+          schema:
+            type: string
+            default: "America/New_York"
+        - name: weeklyAlignment
+          in: query
+          description: Day of week to align weekly candles (Monday, Tuesday, etc.)
+          required: false
+          schema:
+            type: string
+            enum: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+            default: Friday
+      responses:
+        '200':
+          description: Latest candlesticks successfully retrieved
+          headers:
+            RequestID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  latestCandles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        instrument:
+                          type: string
+                        granularity:
+                          $ref: '#/components/schemas/CandlestickGranularity'
+                        candles:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/Candlestick'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /accounts/{accountID}/instruments/{instrument}/candles:
+    get:
+      tags:
+        - Pricing
+      summary: Get Account Instrument Candlesticks
+      description: Fetch candlestick data for a specific instrument within an account context
+      operationId: getAccountInstrumentCandles
+      parameters:
+        - $ref: '#/components/parameters/AccountID'
+        - name: instrument
+          in: path
+          description: Name of the Instrument
+          required: true
+          schema:
+            type: string
+          example: "EUR_USD"
+        - name: price
+          in: query
+          description: The Price component(s) to get candlestick data for
+          required: false
+          schema:
+            type: string
+            enum: [M, B, A, BA, MBA]
+            default: M
+        - name: granularity
+          in: query
+          description: The granularity of the candlesticks to fetch
+          required: false
+          schema:
+            $ref: '#/components/schemas/CandlestickGranularity'
+        - name: count
+          in: query
+          description: The number of candlesticks to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+            default: 500
+        - name: from
+          in: query
+          description: The start of the time range to fetch candlesticks for
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: The end of the time range to fetch candlesticks for
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: smooth
+          in: query
+          description: Whether to smooth the returned candlesticks
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: includeFirst
+          in: query
+          description: Whether to include the first query candlestick if it exists outside the query time range
+          required: false
+          schema:
+            type: boolean
+            default: true
+        - name: dailyAlignment
+          in: query
+          description: Hour of day to align daily candles (0-23)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 23
+            default: 17
+        - name: alignmentTimezone
+          in: query
+          description: Timezone for dailyAlignment (e.g., America/New_York)
+          required: false
+          schema:
+            type: string
+            default: "America/New_York"
+        - name: weeklyAlignment
+          in: query
+          description: Day of week to align weekly candles (Monday, Tuesday, etc.)
+          required: false
+          schema:
+            type: string
+            enum: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+            default: Friday
+      responses:
+        '200':
+          description: Candlestick data successfully retrieved
+          headers:
+            RequestID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  instrument:
+                    type: string
+                  granularity:
+                    $ref: '#/components/schemas/CandlestickGranularity'
+                  candles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Candlestick'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1501,95 +1886,6 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
 
-  /instruments/{instrument}/orderBook:
-    get:
-      tags:
-        - Instruments
-      summary: Get Order Book
-      description: Fetch an order book for an instrument
-      operationId: getInstrumentOrderBook
-      parameters:
-        - name: instrument
-          in: path
-          description: Name of the Instrument
-          required: true
-          schema:
-            type: string
-          example: "EUR_USD"
-        - name: time
-          in: query
-          description: The time of the snapshot to fetch
-          required: false
-          schema:
-            type: string
-            format: date-time
-      responses:
-        '200':
-          description: The order book has been successfully provided
-          headers:
-            RequestID:
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  orderBook:
-                    $ref: '#/components/schemas/OrderBook'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/MethodNotAllowed'
-
-  /instruments/{instrument}/positionBook:
-    get:
-      tags:
-        - Instruments
-      summary: Get Position Book
-      description: Fetch a position book for an instrument
-      operationId: getInstrumentPositionBook
-      parameters:
-        - name: instrument
-          in: path
-          description: Name of the Instrument
-          required: true
-          schema:
-            type: string
-          example: "EUR_USD"
-        - name: time
-          in: query
-          description: The time of the snapshot to fetch
-          required: false
-          schema:
-            type: string
-            format: date-time
-      responses:
-        '200':
-          description: The position book has been successfully provided
-          headers:
-            RequestID:
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  positionBook:
-                    $ref: '#/components/schemas/PositionBook'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/MethodNotAllowed'
 
 components:
   securitySchemes:
@@ -2957,81 +3253,6 @@ components:
       default: S5
 
     # Order Book and Position Book schemas
-    OrderBook:
-      type: object
-      description: The representation of an instrument's order book at a point in time
-      properties:
-        instrument:
-          type: string
-          description: The order book's instrument
-          example: "EUR_USD"
-        time:
-          type: string
-          format: date-time
-          description: The time when the order book snapshot was created
-        price:
-          type: string
-          description: The price (midpoint) for the order book snapshot
-        bucketWidth:
-          type: string
-          description: The price width for each bucket
-        buckets:
-          type: array
-          description: The partitioned order book, divided into buckets using a default bucket width
-          items:
-            $ref: '#/components/schemas/OrderBookBucket'
-
-    OrderBookBucket:
-      type: object
-      description: The order book data for a specific price bucket
-      properties:
-        price:
-          type: string
-          description: The lowest price (inclusive) covered by the bucket
-        longCountPercent:
-          type: string
-          description: The percentage of all orders that are long at this price
-        shortCountPercent:
-          type: string
-          description: The percentage of all orders that are short at this price
-
-    PositionBook:
-      type: object
-      description: The representation of an instrument's position book at a point in time
-      properties:
-        instrument:
-          type: string
-          description: The position book's instrument
-          example: "EUR_USD"
-        time:
-          type: string
-          format: date-time
-          description: The time when the position book snapshot was created
-        price:
-          type: string
-          description: The price (midpoint) for the position book snapshot
-        bucketWidth:
-          type: string
-          description: The price width for each bucket
-        buckets:
-          type: array
-          description: The partitioned position book, divided into buckets using a default bucket width
-          items:
-            $ref: '#/components/schemas/PositionBookBucket'
-
-    PositionBookBucket:
-      type: object
-      description: The position book data for a specific price bucket
-      properties:
-        price:
-          type: string
-          description: The lowest price (inclusive) covered by the bucket
-        longCountPercent:
-          type: string
-          description: The percentage of all positions that are long at this price
-        shortCountPercent:
-          type: string
-          description: The percentage of all positions that are short at this price
 
     ErrorResponse:
       type: object
