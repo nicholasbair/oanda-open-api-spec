@@ -2004,15 +2004,19 @@ components:
           type: string
           format: date-time
           description: The date/time when the Account was created
+        guaranteedStopLossOrderParameters:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderParameters'
         guaranteedStopLossOrderMode:
           $ref: '#/components/schemas/GuaranteedStopLossOrderMode'
+        guaranteedStopLossOrderMutability:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderMutability'
         pl:
           type: string
           description: The total profit/loss realized over the lifetime of the Account
         resettablePL:
           type: string
           description: The total realized profit/loss for the account since it was last reset
-        resettabledPLTime:
+        resettablePLTime:
           type: string
           format: date-time
           description: The date/time that the Account's resettablePL was last reset
@@ -2022,6 +2026,9 @@ components:
         commission:
           type: string
           description: The total amount of commission paid over the lifetime of the Account
+        dividendAdjustment:
+          type: string
+          description: The total amount of dividend adjustment paid/collected over the lifetime of the Account
         guaranteedExecutionFees:
           type: string
           description: The total amount of fees charged over the lifetime of the Account for execution of guaranteed Stop Loss Orders
@@ -2132,26 +2139,48 @@ components:
           type: string
           format: date-time
           description: The date/time when the Account was created
+        guaranteedStopLossOrderParameters:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderParameters'
         guaranteedStopLossOrderMode:
           $ref: '#/components/schemas/GuaranteedStopLossOrderMode'
+        guaranteedStopLossOrderMutability:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderMutability'
         pl:
           type: string
           description: The total profit/loss realized over the lifetime of the Account
         resettablePL:
           type: string
           description: The total realized profit/loss since last reset
+        resettablePLTime:
+          type: string
+          format: date-time
+          description: The date/time that the Account's resettablePL was last reset
         financing:
           type: string
           description: The total amount of financing paid/collected
         commission:
           type: string
           description: The total amount of commission paid
+        dividendAdjustment:
+          type: string
+          description: The total amount of dividend adjustment paid/collected
         guaranteedExecutionFees:
           type: string
           description: The total amount of fees for guaranteed Stop Loss Orders
         marginRate:
           type: string
           description: Client-provided margin rate override
+        marginCallEnterTime:
+          type: string
+          format: date-time
+          description: The date/time when the Account entered a margin call state
+        marginCallExtensionCount:
+          type: integer
+          description: The number of times that the Account's current margin call was extended
+        lastMarginCallExtensionTime:
+          type: string
+          format: date-time
+          description: The date/time of the Account's last margin call extension
         openTradeCount:
           type: integer
           description: The number of Trades currently open
@@ -2255,6 +2284,23 @@ components:
           description: The margin rate for this instrument
         commission:
           $ref: '#/components/schemas/InstrumentCommission'
+        guaranteedStopLossOrderMode:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderModeForInstrument'
+        guaranteedStopLossOrderExecutionPremium:
+          type: string
+          description: The premium charged for guaranteed execution of a Guaranteed Stop Loss Order on this Instrument
+        guaranteedStopLossOrderLevelRestriction:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderLevelRestriction'
+        minimumGuaranteedStopLossDistance:
+          type: string
+          description: The minimum distance from the current price that a Guaranteed Stop Loss Order can be set on this Instrument
+        financing:
+          $ref: '#/components/schemas/InstrumentFinancing'
+        tags:
+          type: array
+          description: The tags assigned to the Instrument
+          items:
+            $ref: '#/components/schemas/Tag'
 
     InstrumentCommission:
       type: object
@@ -2270,6 +2316,102 @@ components:
           type: string
           description: The minimum commission amount (in the Account's home currency) charged when an order is filled
 
+    Tag:
+      type: object
+      description: A tag assigned to an Instrument.
+      properties:
+        type:
+          type: string
+          description: The type of the tag
+        name:
+          type: string
+          description: The name of the tag
+
+    DayOfWeek:
+      type: string
+      description: The day of the week.
+      enum:
+        - SUNDAY
+        - MONDAY
+        - TUESDAY
+        - WEDNESDAY
+        - THURSDAY
+        - FRIDAY
+        - SATURDAY
+
+    FinancingDayOfWeek:
+      type: object
+      description: Financing day of week details.
+      properties:
+        dayOfWeek:
+          $ref: '#/components/schemas/DayOfWeek'
+        daysCharged:
+          type: integer
+          description: The number of days charged of financing for this day of week
+
+    InstrumentFinancing:
+      type: object
+      description: Financing information for an Instrument.
+      properties:
+        longRate:
+          type: string
+          description: The annual financing rate for long positions on this Instrument
+        shortRate:
+          type: string
+          description: The annual financing rate for short positions on this Instrument
+        financingDaysOfWeek:
+          type: array
+          description: The days of the week when financing charges are applied
+          items:
+            $ref: '#/components/schemas/FinancingDayOfWeek'
+
+    GuaranteedStopLossOrderModeForInstrument:
+      type: string
+      description: The guaranteed Stop Loss Order mode for an Instrument.
+      enum:
+        - DISABLED
+        - ALLOWED
+        - REQUIRED
+
+    GuaranteedStopLossOrderLevelRestriction:
+      type: object
+      description: Represents a price level restriction for Guaranteed Stop Loss Orders on an Instrument.
+      properties:
+        volume:
+          type: string
+          description: The cumulative volume threshold for the restriction
+        priceRange:
+          type: string
+          description: The price range restriction
+
+    Direction:
+      type: string
+      description: The direction of a trade or position.
+      enum:
+        - LONG
+        - SHORT
+
+    ConversionFactor:
+      type: object
+      description: A conversion factor used to convert between currencies.
+      properties:
+        factor:
+          type: string
+          description: The conversion factor value
+
+    HomeConversionFactors:
+      type: object
+      description: Conversion factors used to convert between an Instrument's quote or base currency and the Account's home currency.
+      properties:
+        gainQuoteHome:
+          $ref: '#/components/schemas/ConversionFactor'
+        lossQuoteHome:
+          $ref: '#/components/schemas/ConversionFactor'
+        gainBaseHome:
+          $ref: '#/components/schemas/ConversionFactor'
+        lossBaseHome:
+          $ref: '#/components/schemas/ConversionFactor'
+
     GuaranteedStopLossOrderMode:
       type: string
       description: The overall behaviour of the Account regarding guaranteed Stop Loss Orders.
@@ -2277,6 +2419,24 @@ components:
         - DISABLED
         - ALLOWED
         - REQUIRED
+
+    GuaranteedStopLossOrderMutability:
+      type: string
+      description: The mutability of a guaranteed Stop Loss Order.
+      enum:
+        - FIXED
+        - REPLACEABLE
+        - CANCELABLE
+        - PRICE_WIDEN_ONLY
+
+    GuaranteedStopLossOrderParameters:
+      type: object
+      description: The parameters for the Account's guaranteed Stop Loss Order settings.
+      properties:
+        mutabilityMarketOpen:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderMutability'
+        mutabilityMarketHalted:
+          $ref: '#/components/schemas/GuaranteedStopLossOrderMutability'
 
     ClientConfigureTransaction:
       type: object
@@ -2402,6 +2562,38 @@ components:
         marginCallPercent:
           type: string
           description: The Account's margin call percentage
+        balance:
+          type: string
+          description: The current balance of the Account
+        pl:
+          type: string
+          description: The total profit/loss realized over the lifetime of the Account
+        resettablePL:
+          type: string
+          description: The total realized profit/loss for the account since it was last reset
+        financing:
+          type: string
+          description: The total amount of financing paid/collected over the lifetime of the Account
+        commission:
+          type: string
+          description: The total amount of commission paid over the lifetime of the Account
+        dividendAdjustment:
+          type: string
+          description: The total amount of dividend adjustment paid/collected over the lifetime of the Account
+        guaranteedExecutionFees:
+          type: string
+          description: The total amount of fees charged over the lifetime of the Account for execution of guaranteed Stop Loss Orders
+        marginCallEnterTime:
+          type: string
+          format: date-time
+          description: The date/time when the Account entered a margin call state
+        marginCallExtensionCount:
+          type: integer
+          description: The number of times that the Account's current margin call was extended
+        lastMarginCallExtensionTime:
+          type: string
+          format: date-time
+          description: The date/time of the Account's last margin call extension
         orders:
           type: array
           description: Orders in the Account
@@ -2417,6 +2609,132 @@ components:
           description: Positions in the Account
           items:
             $ref: '#/components/schemas/CalculatedPositionState'
+
+    AccumulatedAccountState:
+      type: object
+      description: The accumulated state portion of an Account.
+      properties:
+        balance:
+          type: string
+          description: The current balance of the Account
+        pl:
+          type: string
+          description: The total profit/loss realized over the lifetime of the Account
+        resettablePL:
+          type: string
+          description: The total realized profit/loss for the account since it was last reset
+        financing:
+          type: string
+          description: The total amount of financing paid/collected over the lifetime of the Account
+        commission:
+          type: string
+          description: The total amount of commission paid over the lifetime of the Account
+        dividendAdjustment:
+          type: string
+          description: The total amount of dividend adjustment paid/collected over the lifetime of the Account
+        guaranteedExecutionFees:
+          type: string
+          description: The total amount of fees charged over the lifetime of the Account for execution of guaranteed Stop Loss Orders
+        marginCallEnterTime:
+          type: string
+          format: date-time
+          description: The date/time when the Account entered a margin call state
+        marginCallExtensionCount:
+          type: integer
+          description: The number of times that the Account's current margin call was extended
+        lastMarginCallExtensionTime:
+          type: string
+          format: date-time
+          description: The date/time of the Account's last margin call extension
+
+    CalculatedAccountState:
+      type: object
+      description: The calculated state portion of an Account.
+      properties:
+        unrealizedPL:
+          type: string
+          description: The total unrealized profit/loss for all Trades currently open in the Account
+        NAV:
+          type: string
+          description: The net asset value of the Account
+        marginUsed:
+          type: string
+          description: Margin currently used for the Account
+        marginAvailable:
+          type: string
+          description: Margin available for trading
+        positionValue:
+          type: string
+          description: The value of the Account's open positions
+        marginCloseoutUnrealizedPL:
+          type: string
+          description: The Account's margin closeout unrealized PL
+        marginCloseoutNAV:
+          type: string
+          description: The Account's margin closeout NAV
+        marginCloseoutMarginUsed:
+          type: string
+          description: The Account's margin closeout margin used
+        marginCloseoutPercent:
+          type: string
+          description: The Account's margin closeout percentage
+        marginCloseoutPositionValue:
+          type: string
+          description: The value of the Account's open positions as used for margin closeout calculations
+        withdrawalLimit:
+          type: string
+          description: The current WithdrawalLimit for the account
+        marginCallMarginUsed:
+          type: string
+          description: The Account's margin call margin used
+        marginCallPercent:
+          type: string
+          description: The Account's margin call percentage
+
+    UserAttributes:
+      type: object
+      description: The attributes of a User.
+      properties:
+        userID:
+          type: integer
+          description: The user's identifier
+        username:
+          type: string
+          description: The user's username
+        title:
+          type: string
+          description: The user's title
+        name:
+          type: string
+          description: The user's name
+        email:
+          type: string
+          description: The user's email address
+        divisionAbbreviation:
+          type: string
+          description: The abbreviation of the user's division
+        languageAbbreviation:
+          type: string
+          description: The abbreviation of the user's language
+        homeCurrency:
+          type: string
+          description: The user's home currency
+
+    PositionAggregationMode:
+      type: string
+      description: The mode used to aggregate positions for an Account.
+      enum:
+        - ABSOLUTE_SUM
+        - MAXIMAL_SIDE
+        - NET_SUM
+
+    AccountFinancingMode:
+      type: string
+      description: The financing mode used for an Account.
+      enum:
+        - NO_FINANCING
+        - SECOND_BY_SECOND
+        - DAILY
 
     # Order schemas
     Order:
@@ -2450,7 +2768,9 @@ components:
             - MARKET_IF_TOUCHED
             - TAKE_PROFIT
             - STOP_LOSS
+            - GUARANTEED_STOP_LOSS
             - TRAILING_STOP_LOSS
+            - FIXED_PRICE
         instrument:
           type: string
           description: The Order's Instrument
@@ -2458,6 +2778,12 @@ components:
         units:
           type: string
           description: The quantity requested to be filled by the Order
+        price:
+          type: string
+          description: The price threshold specified for the Order (for LIMIT, STOP, TAKE_PROFIT, STOP_LOSS, GUARANTEED_STOP_LOSS)
+        priceBound:
+          type: string
+          description: The worst price the Order may be filled at (for MARKET, STOP, MARKET_IF_TOUCHED)
         timeInForce:
           type: string
           description: The time-in-force requested for the Order
@@ -2467,6 +2793,10 @@ components:
             - GFD
             - FOK
             - IOC
+        gtdTime:
+          type: string
+          format: date-time
+          description: The date/time when the Order will be cancelled if timeInForce is GTD
         positionFill:
           type: string
           description: How the Order should be filled
@@ -2475,9 +2805,60 @@ components:
             - REDUCE_FIRST
             - REDUCE_ONLY
             - DEFAULT
-        price:
+        triggerCondition:
           type: string
-          description: The price threshold specified for the Order (for LIMIT, STOP, etc.)
+          description: The price threshold condition used to determine when the Order will be triggered and filled
+          enum:
+            - TOUCH
+            - INVERTED_PRICE_THRESHOLD
+            - DEFAULT
+        tradeClose:
+          $ref: '#/components/schemas/MarketOrderTradeClose'
+        longPositionCloseout:
+          $ref: '#/components/schemas/MarketOrderPositionCloseout'
+        shortPositionCloseout:
+          $ref: '#/components/schemas/MarketOrderPositionCloseout'
+        marginCloseout:
+          $ref: '#/components/schemas/MarketOrderMarginCloseout'
+        delayedTradeClose:
+          $ref: '#/components/schemas/MarketOrderDelayedTradeClose'
+        tradeID:
+          type: string
+          description: The ID of the Trade to close (for exit Orders)
+        clientTradeID:
+          type: string
+          description: The client-provided ID of the Trade to close
+        distance:
+          type: string
+          description: The price distance for STOP_LOSS, GUARANTEED_STOP_LOSS or TRAILING_STOP_LOSS Orders as an alternative to price
+        trailingStopValue:
+          type: string
+          description: The trailing stop price value for a TRAILING_STOP_LOSS Order; set when the Order is triggered
+        guaranteed:
+          type: boolean
+          description: "Deprecated: Flag indicating if the Stop Loss Order is guaranteed"
+        guaranteedExecutionPremium:
+          type: string
+          description: "Deprecated: The premium charged for guaranteed execution of a Stop Loss Order"
+        initialMarketPrice:
+          type: string
+          description: The initial market price when the MarketIfTouched Order was created
+        tradeState:
+          type: string
+          description: The state required for the Trade to be closed (for FIXED_PRICE Orders)
+        takeProfitOnFill:
+          $ref: '#/components/schemas/TakeProfitDetails'
+        stopLossOnFill:
+          $ref: '#/components/schemas/StopLossDetails'
+        guaranteedStopLossOnFill:
+          $ref: '#/components/schemas/GuaranteedStopLossDetails'
+        trailingStopLossOnFill:
+          $ref: '#/components/schemas/TrailingStopLossDetails'
+        tradeClientExtensions:
+          $ref: '#/components/schemas/ClientExtensions'
+        fillingTransactionID:
+          type: string
+          description: The ID of the Transaction that filled the Order
         filledTime:
           type: string
           format: date-time
@@ -2500,6 +2881,12 @@ components:
           type: string
           format: date-time
           description: The time when the Order was cancelled
+        replacesOrderID:
+          type: string
+          description: The ID of the Order that was replaced by this Order
+        replacedByOrderID:
+          type: string
+          description: The ID of the Order that replaced this Order
 
     OrderRequest:
       type: object
@@ -2518,13 +2905,21 @@ components:
             - MARKET_IF_TOUCHED
             - TAKE_PROFIT
             - STOP_LOSS
+            - GUARANTEED_STOP_LOSS
             - TRAILING_STOP_LOSS
+            - FIXED_PRICE
         instrument:
           type: string
           example: "EUR_USD"
         units:
           type: string
           description: The quantity requested (positive for long, negative for short)
+        price:
+          type: string
+          description: The price threshold (required for LIMIT, STOP, TAKE_PROFIT, STOP_LOSS, GUARANTEED_STOP_LOSS orders)
+        priceBound:
+          type: string
+          description: The worst price the order may be filled at (for MARKET, STOP, MARKET_IF_TOUCHED)
         timeInForce:
           type: string
           default: GTC
@@ -2534,6 +2929,10 @@ components:
             - GFD
             - FOK
             - IOC
+        gtdTime:
+          type: string
+          format: date-time
+          description: The date/time when the Order will be cancelled if timeInForce is GTD
         positionFill:
           type: string
           default: DEFAULT
@@ -2542,20 +2941,37 @@ components:
             - REDUCE_FIRST
             - REDUCE_ONLY
             - DEFAULT
-        price:
+        triggerCondition:
           type: string
-          description: The price threshold (required for LIMIT, STOP orders)
-        priceBound:
+          description: The price threshold condition used to determine when the Order will be triggered and filled
+          enum:
+            - TOUCH
+            - INVERTED_PRICE_THRESHOLD
+            - DEFAULT
+        tradeID:
           type: string
-          description: The worst price the order may be filled at
+          description: The ID of the Trade to close (for exit Orders)
+        clientTradeID:
+          type: string
+          description: The client-provided ID of the Trade to close
+        distance:
+          type: string
+          description: The price distance for STOP_LOSS, GUARANTEED_STOP_LOSS or TRAILING_STOP_LOSS Orders
+        guaranteed:
+          type: boolean
+          description: "Deprecated: Flag indicating if the Stop Loss Order is guaranteed"
         clientExtensions:
           $ref: '#/components/schemas/ClientExtensions'
         takeProfitOnFill:
           $ref: '#/components/schemas/TakeProfitDetails'
         stopLossOnFill:
           $ref: '#/components/schemas/StopLossDetails'
+        guaranteedStopLossOnFill:
+          $ref: '#/components/schemas/GuaranteedStopLossDetails'
         trailingStopLossOnFill:
           $ref: '#/components/schemas/TrailingStopLossDetails'
+        tradeClientExtensions:
+          $ref: '#/components/schemas/ClientExtensions'
 
     OrderFillTransaction:
       type: object
@@ -2644,6 +3060,47 @@ components:
         errorMessage:
           type: string
 
+    MarketOrderTradeClose:
+      type: object
+      description: An instruction to close a Trade when a MarketOrder is filled.
+      properties:
+        tradeID:
+          type: string
+          description: The ID of the Trade to close
+        units:
+          type: string
+          description: The number of units to close, or "ALL" to close the entire Trade
+
+    MarketOrderPositionCloseout:
+      type: object
+      description: An instruction to close a Position for a specific Instrument when a MarketOrder is filled.
+      properties:
+        instrumentName:
+          type: string
+          description: The name of the Instrument to closeout
+        units:
+          type: string
+          description: The number of units to closeout, or "ALL" to closeout the entire Position
+
+    MarketOrderMarginCloseout:
+      type: object
+      description: An instruction indicating that when filling a MarketOrder, the Account's margin should be closed out.
+      properties:
+        units:
+          type: string
+          description: The number of units to closeout, or "ALL" to closeout the entire margin
+
+    MarketOrderDelayedTradeClose:
+      type: object
+      description: An instruction to close a Trade that will be delayed until the next tradeable moment when filling a MarketOrder.
+      properties:
+        tradeID:
+          type: string
+          description: The ID of the Trade to close
+        units:
+          type: string
+          description: The number of units to close, or "ALL" to close the entire Trade
+
     ClientExtensions:
       type: object
       description: Client-provided extensions and metadata
@@ -2698,6 +3155,24 @@ components:
         distance:
           type: string
           description: The trailing distance from the current price
+        timeInForce:
+          type: string
+          default: GTC
+          enum:
+            - GTC
+            - GTD
+            - GFD
+
+    GuaranteedStopLossDetails:
+      type: object
+      description: Details for a Guaranteed Stop Loss Order
+      properties:
+        price:
+          type: string
+          description: The price the Guaranteed Stop Loss Order will be triggered at
+        distance:
+          type: string
+          description: The distance from the Trade price, as an alternative to the price field
         timeInForce:
           type: string
           default: GTC
@@ -2761,6 +3236,9 @@ components:
         financing:
           type: string
           description: The financing paid/collected for this Trade
+        dividendAdjustment:
+          type: string
+          description: The dividend adjustment paid/collected for this Trade
         closeTime:
           type: string
           format: date-time
@@ -2776,25 +3254,86 @@ components:
 
     TradeSummary:
       type: object
-      description: Trade summary representation
+      description: A TradeSummary object only provides summary information about a Trade. It does not contain the full Trade definition, but does contain most of the fields present in the full Trade representation.
       properties:
         id:
           type: string
+          description: The Trade's identifier
         instrument:
           type: string
+          description: The Trade's Instrument
         price:
           type: string
+          description: The execution price of the Trade
         openTime:
           type: string
           format: date-time
-        initialUnits:
-          type: string
-        currentUnits:
-          type: string
+          description: The date/time when the Trade was opened
         state:
           type: string
+          description: The current state of the Trade
+          enum:
+            - OPEN
+            - CLOSED
+            - CLOSE_WHEN_TRADEABLE
+        initialUnits:
+          type: string
+          description: The initial size of the Trade
+        initialMarginRequired:
+          type: string
+          description: The margin required at the time the Trade was created
+        currentUnits:
+          type: string
+          description: The number of units currently open for the Trade
+        realizedPL:
+          type: string
+          description: The total profit/loss realized on the closed portion of the Trade
         unrealizedPL:
           type: string
+          description: The unrealized profit/loss on the open portion of the Trade
+        marginUsed:
+          type: string
+          description: Margin currently used by the Trade
+        averageClosePrice:
+          type: string
+          description: The average closing price of the Trade
+        closingTransactionIDs:
+          type: array
+          description: The IDs of the Transactions that have closed portions of this Trade
+          items:
+            type: string
+        financing:
+          type: string
+          description: The financing paid/collected for this Trade
+        dividendAdjustment:
+          type: string
+          description: The dividend adjustment paid/collected for this Trade
+        closeTime:
+          type: string
+          format: date-time
+          description: The date/time when the Trade was fully closed
+        clientExtensions:
+          $ref: '#/components/schemas/ClientExtensions'
+        takeProfitOrderID:
+          type: string
+          description: The ID of the TakeProfit Order linked to this Trade, if any
+        stopLossOrderID:
+          type: string
+          description: The ID of the StopLoss Order linked to this Trade, if any
+        guaranteedStopLossOrderID:
+          type: string
+          description: The ID of the GuaranteedStopLoss Order linked to this Trade, if any
+        trailingStopLossOrderID:
+          type: string
+          description: The ID of the TrailingStopLoss Order linked to this Trade, if any
+
+    TradePL:
+      type: string
+      description: The classification of a Trade by the sign of its unrealized or realized P&L
+      enum:
+        - POSITIVE
+        - NEGATIVE
+        - ZERO
 
     TradeOpen:
       type: object
@@ -2892,6 +3431,9 @@ components:
         commission:
           type: string
           description: The total amount of commission paid for this instrument
+        dividendAdjustment:
+          type: string
+          description: The total amount of dividend adjustment paid/collected for this instrument
         guaranteedExecutionFees:
           type: string
           description: The total amount of fees charged for guaranteed Stop Loss Orders
@@ -2927,6 +3469,9 @@ components:
         financing:
           type: string
           description: The total amount of financing paid/collected for this PositionSide
+        dividendAdjustment:
+          type: string
+          description: The total amount of dividend adjustment paid/collected for this PositionSide
         guaranteedExecutionFees:
           type: string
           description: The total amount of fees charged for guaranteed Stop Loss Orders attached to Trades
@@ -2937,13 +3482,26 @@ components:
       properties:
         id:
           type: string
+          description: The Transaction's identifier
         time:
           type: string
           format: date-time
-        type:
-          type: string
+          description: The date/time when the Transaction was created
+        userID:
+          type: integer
+          description: The ID of the user that initiated the Transaction
         accountID:
           type: string
+          description: The ID of the Account the Transaction was created for
+        batchID:
+          type: string
+          description: The ID of the batch that the Transaction belongs to
+        requestID:
+          type: string
+          description: The Request Identifier associated with the Transaction
+        type:
+          type: string
+          description: The Type of the Transaction
 
     DynamicOrderState:
       type: object
@@ -2962,6 +3520,9 @@ components:
           type: string
         unrealizedPL:
           type: string
+        marginUsed:
+          type: string
+          description: Margin currently used by the Trade
 
     CalculatedPositionState:
       type: object
@@ -2971,6 +3532,15 @@ components:
           type: string
         netUnrealizedPL:
           type: string
+        longUnrealizedPL:
+          type: string
+          description: The unrealized profit/loss of the long side of the Position
+        shortUnrealizedPL:
+          type: string
+          description: The unrealized profit/loss of the short side of the Position
+        marginUsed:
+          type: string
+          description: Margin currently used by the Position
 
     # Pricing schemas
     ClientPrice:
@@ -3089,6 +3659,9 @@ components:
         accountLoss:
           type: string
           description: The factor used to convert a loss in the specified currency to the home currency
+        positionValue:
+          type: string
+          description: The factor used to convert a Position value in the specified currency to the home currency
 
     QuoteHomeConversionFactors:
       type: object
@@ -3250,6 +3823,33 @@ components:
         - W     # 1 week
         - M     # 1 month
       default: S5
+
+    WeeklyAlignment:
+      type: string
+      description: The day of the week used for the weekly candlestick alignment
+      enum:
+        - SUNDAY
+        - MONDAY
+        - TUESDAY
+        - WEDNESDAY
+        - THURSDAY
+        - FRIDAY
+        - SATURDAY
+
+    CandlestickResponse:
+      type: object
+      description: The body of a Candlestick request response
+      properties:
+        instrument:
+          type: string
+          description: The name of the Instrument
+        granularity:
+          $ref: '#/components/schemas/CandlestickGranularity'
+        candles:
+          type: array
+          description: The candlesticks that have been returned
+          items:
+            $ref: '#/components/schemas/Candlestick'
 
     # Order Book and Position Book schemas
 
